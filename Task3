@@ -1,0 +1,106 @@
+
+# Predictive Analytics Using Historical Data
+# Linear Regression for Future Trend Forecasting
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+
+# 1. Generate sample historical data
+np.random.seed(42)
+
+years = np.arange(2015, 2026)
+sales = np.array([120, 135, 142, 160, 175, 190,
+                  205, 220, 235, 255, 275])
+
+df = pd.DataFrame({
+    "Year": years,
+    "Sales": sales
+})
+
+print("Historical Dataset:")
+print(df.to_string(index=False))
+
+# 2. Prepare features and target
+X = df[["Year"]]
+y = df["Sales"]
+
+# 3. Split chronologically: older years for training,
+#    most recent years for testing
+X_train = X.iloc[:-3]
+X_test = X.iloc[-3:]
+y_train = y.iloc[:-3]
+y_test = y.iloc[-3:]
+
+# 4. Train Linear Regression model
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# 5. Predict test-period values
+y_pred = model.predict(X_test)
+
+# 6. Evaluate the model
+mae = mean_absolute_error(y_test, y_pred)
+rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+r2 = r2_score(y_test, y_pred)
+
+print("\nModel Evaluation:")
+print(f"Mean Absolute Error (MAE): {mae:.2f}")
+print(f"Root Mean Squared Error (RMSE): {rmse:.2f}")
+print(f"R2 Score: {r2:.3f}")
+
+print("\nActual vs Predicted:")
+comparison = pd.DataFrame({
+    "Year": X_test["Year"].values,
+    "Actual Sales": y_test.values,
+    "Predicted Sales": np.round(y_pred, 2)
+})
+print(comparison.to_string(index=False))
+
+# 7. Forecast the next 5 years
+future_years = pd.DataFrame({
+    "Year": np.arange(2026, 2031)
+})
+
+future_sales = model.predict(future_years)
+
+forecast = future_years.copy()
+forecast["Forecast Sales"] = np.round(future_sales, 2)
+
+print("\nFuture Sales Forecast:")
+print(forecast.to_string(index=False))
+
+# 8. Visualize historical data and future predictions
+plt.figure(figsize=(10, 6))
+
+plt.plot(df["Year"], df["Sales"],
+         marker="o", label="Historical Sales")
+
+plt.plot(X_test["Year"], y_pred,
+         marker="s", linestyle="--", label="Test Predictions")
+
+plt.plot(future_years["Year"], future_sales,
+         marker="^", linestyle="--", label="Future Forecast")
+
+plt.axvline(2025, linestyle=":", label="Forecast Start")
+
+plt.title("Historical Data and Future Sales Forecast")
+plt.xlabel("Year")
+plt.ylabel("Sales")
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+
+# 9. Save results to CSV
+df.to_csv("historical_data.csv", index=False)
+comparison.to_csv("prediction_results.csv", index=False)
+forecast.to_csv("future_forecast.csv", index=False)
+
+print("\nFiles saved successfully:")
+print("1. historical_data.csv")
+print("2. prediction_results.csv")
+print("3. future_forecast.csv")
